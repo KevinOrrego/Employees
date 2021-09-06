@@ -9,9 +9,7 @@ namespace employees.Functions.Entities
     {
         public int EmployeeId { get; set; }
 
-        public DateTime Date { get; set; }
-
-        public DateTime Hour { get; set; }
+        public DateTime DateHour { get; set; }
 
         public int Type { get; set; }
 
