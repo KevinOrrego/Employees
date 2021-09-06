@@ -9,7 +9,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
+using System.Data;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace employees.Functions.Funtions
@@ -70,6 +73,37 @@ namespace employees.Functions.Funtions
             });
         }
 
+        ////tratando de evitar que metan dos entradas seguidas
+
+        //[FunctionName(nameof(CreateNoDuplicatedEntry))]
+        //public static async Task<IActionResult> CreateNoDuplicatedEntry(
+        //    [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "entry")] HttpRequest req,
+        //    [Table("entry", Connection = "AzureWebJobsStorage")] CloudTable entryTable,
+        //    ILogger log)
+        //{
+        //    log.LogInformation("new entry recieved");
+
+        //    string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+        //    Entry entry = JsonConvert.DeserializeObject<Entry>(requestBody);
+
+        //    TableQuery<EntryEntity> query = new TableQuery<EntryEntity>();
+        //    TableQuerySegment<EntryEntity> entries = await entryTable.ExecuteQuerySegmentedAsync(query, null);
+
+        //    DataView dv = new DataView("ENTRY");
+
+        //    string message = "New entry stored in table";
+        //    log.LogInformation(message);
+
+        //    return new OkObjectResult(new Response
+        //    {
+        //        IsSuccess = true,
+        //        Message = "Entry added to the database",
+        //        Result = entries
+        //    });
+        //}
+
+        ////tratando de evitar que metan dos entradas seguidas
+
         [FunctionName(nameof(UpdateEntry))]
         public static async Task<IActionResult> UpdateEntry(
             [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "entry/{id}")] HttpRequest req,
@@ -97,15 +131,15 @@ namespace employees.Functions.Funtions
                 });
             }
 
-            //update entry
-
             EntryEntity entryEntity = (EntryEntity)findResult.Result;
 
             //entryEntity. = entry.IsCompleted;
 
-            if ((entry?.Type != null))
+            if ((entry?.Type != null) && (entry?.DateHour != null) && (entry?.EmployeeId != null))
             {
                 entryEntity.EmployeeId = entry.EmployeeId;
+                entryEntity.DateHour = entry.DateHour;
+                entryEntity.Type = entry.Type;
             }
 
 
@@ -207,5 +241,33 @@ namespace employees.Functions.Funtions
                 Result = entryEntity
             });
         }
+
+
+        //Trying a consolidated consult
+
+        [FunctionName(nameof(StartConsolidation))]
+        public static async Task<IActionResult> StartConsolidation(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "consolidated-entries")] HttpRequest req,
+            [Table("entry", Connection = "AzureWebJobsStorage")] CloudTable entryTable,
+            ILogger log)
+        {
+            log.LogInformation("Get consolidated entries received");
+
+            string notConsolidated = TableQuery.GenerateFilterConditionForBool("IsConsolidated", QueryComparisons.Equal, false);
+            TableQuery<EntryEntity> query = new TableQuery<EntryEntity>().Where(notConsolidated);
+            TableQuerySegment<EntryEntity> entries = await entryTable.ExecuteQuerySegmentedAsync(query, null);
+            List<EntryEntity> entriesSorted = entries.OrderBy(x => x.EmployeeId).ThenBy(x => x.DateHour).ToList();
+
+            string message = "Here are all your entries mister";
+            log.LogInformation(message);
+
+            return new OkObjectResult(new Response
+            {
+                IsSuccess = true,
+                Message = message,
+                Result = entriesSorted
+            });
+        }
+
     }
 }
