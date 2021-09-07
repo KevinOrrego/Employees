@@ -38,7 +38,7 @@ namespace employees.Functions.Funtions
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             Entry entry = JsonConvert.DeserializeObject<Entry>(requestBody);
 
-            if ((entry?.EmployeeId == null) || (entry?.Type == null))
+            if ((entry?.EmployeeId == null) || (entry?.Type == null) || (entry?.DateHour == null))
             {
                 return new BadRequestObjectResult(new Response
                 {
@@ -50,7 +50,7 @@ namespace employees.Functions.Funtions
             EntryEntity entryEntity = new EntryEntity
             {
                 EmployeeId = entry.EmployeeId,
-                DateHour = DateTime.UtcNow,
+                DateHour = entry.DateHour,
                 Type = entry.Type,
                 IsConsolidated = false,
                 ETag = "*",
@@ -243,8 +243,6 @@ namespace employees.Functions.Funtions
         }
 
 
-        //Trying a consolidated consult
-
         [FunctionName(nameof(StartConsolidation))]
         public static async Task<IActionResult> StartConsolidation(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "consolidate")] HttpRequest req,
@@ -338,6 +336,34 @@ namespace employees.Functions.Funtions
             {
                 IsSuccess = true,
                 Message = message
+            });
+        }
+
+
+        [FunctionName(nameof(GetAllConsolidatesByDate))]
+        public static async Task<IActionResult> GetAllConsolidatesByDate(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "cosolidetes-list")] HttpRequest req,
+            [Table("consolidatedEmployee", Connection = "AzureWebJobsStorage")] CloudTable consolidatedEmployeeTable,
+            ILogger log)
+        {
+            log.LogInformation("Get consolidates list received");
+
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+
+            ConsolidatedEmployee consolidatedEmployee = JsonConvert.DeserializeObject<ConsolidatedEmployee>(requestBody);
+
+            string getByDate = TableQuery.GenerateFilterConditionForDate("Date", QueryComparisons.Equal, DateTime.Parse(consolidatedEmployee.Date.ToString()));
+            TableQuery<ConsolidatedEmployeeEntity> query = new TableQuery<ConsolidatedEmployeeEntity>().Where(getByDate);
+            TableQuerySegment<ConsolidatedEmployeeEntity> consolidatesList = await consolidatedEmployeeTable.ExecuteQuerySegmentedAsync(query, null);
+
+            string message = "Here are all the consolidates that match that date";
+            log.LogInformation(message);
+
+            return new OkObjectResult(new Response
+            {
+                IsSuccess = true,
+                Message = message,
+                Result = consolidatesList
             });
         }
 
