@@ -73,37 +73,7 @@ namespace employees.Functions.Funtions
             });
         }
 
-        ////tratando de evitar que metan dos entradas seguidas
-
-        //[FunctionName(nameof(CreateNoDuplicatedEntry))]
-        //public static async Task<IActionResult> CreateNoDuplicatedEntry(
-        //    [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "entry")] HttpRequest req,
-        //    [Table("entry", Connection = "AzureWebJobsStorage")] CloudTable entryTable,
-        //    ILogger log)
-        //{
-        //    log.LogInformation("new entry recieved");
-
-        //    string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-        //    Entry entry = JsonConvert.DeserializeObject<Entry>(requestBody);
-
-        //    TableQuery<EntryEntity> query = new TableQuery<EntryEntity>();
-        //    TableQuerySegment<EntryEntity> entries = await entryTable.ExecuteQuerySegmentedAsync(query, null);
-
-        //    DataView dv = new DataView("ENTRY");
-
-        //    string message = "New entry stored in table";
-        //    log.LogInformation(message);
-
-        //    return new OkObjectResult(new Response
-        //    {
-        //        IsSuccess = true,
-        //        Message = "Entry added to the database",
-        //        Result = entries
-        //    });
-        //}
-
-        ////tratando de evitar que metan dos entradas seguidas
-
+         
         [FunctionName(nameof(UpdateEntry))]
         public static async Task<IActionResult> UpdateEntry(
             [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "entry/{id}")] HttpRequest req,
@@ -342,17 +312,19 @@ namespace employees.Functions.Funtions
 
         [FunctionName(nameof(GetAllConsolidatesByDate))]
         public static async Task<IActionResult> GetAllConsolidatesByDate(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "cosolidetes-list")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "consolidates-list/{date}")] HttpRequest req,
             [Table("consolidatedEmployee", Connection = "AzureWebJobsStorage")] CloudTable consolidatedEmployeeTable,
+            string date,
             ILogger log)
         {
             log.LogInformation("Get consolidates list received");
 
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            //string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
 
-            ConsolidatedEmployee consolidatedEmployee = JsonConvert.DeserializeObject<ConsolidatedEmployee>(requestBody);
+            //ConsolidatedEmployee consolidatedEmployee = JsonConvert.DeserializeObject<ConsolidatedEmployee>(requestBody);
 
-            string getByDate = TableQuery.GenerateFilterConditionForDate("Date", QueryComparisons.Equal, DateTime.Parse(consolidatedEmployee.Date.ToString()));
+            string getByDate = TableQuery.GenerateFilterConditionForDate("Date", QueryComparisons.Equal, DateTime.Parse(date));
+            //string getByDate = TableQuery.GenerateFilterConditionForDate("Date", QueryComparisons.Equal, DateTime.Parse(consolidatedEmployee.Date.ToString()));
             TableQuery<ConsolidatedEmployeeEntity> query = new TableQuery<ConsolidatedEmployeeEntity>().Where(getByDate);
             TableQuerySegment<ConsolidatedEmployeeEntity> consolidatesList = await consolidatedEmployeeTable.ExecuteQuerySegmentedAsync(query, null);
 
