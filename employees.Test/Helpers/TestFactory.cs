@@ -29,6 +29,23 @@ namespace employees.Test.Helpers
             };
         }
 
+        public static List<EntryEntity> GetListEntryEntity()
+        {
+            List<EntryEntity> list = new List<EntryEntity>();
+            EntryEntity workingHoursEntity = new EntryEntity
+            {
+                ETag = "*",
+                PartitionKey = "WORKINGHOURS",
+                RowKey = Guid.NewGuid().ToString(),
+                EmployeeId = 1,
+                DateHour = DateTime.UtcNow,
+                IsConsolidated = false,
+                Type = 1
+            };
+            list.Add(workingHoursEntity);
+            return list;
+        }
+
         public static DefaultHttpRequest CreateHttpRequest(Guid entryId, Entry entryRequest)
         {
             string request = JsonConvert.SerializeObject(entryRequest);

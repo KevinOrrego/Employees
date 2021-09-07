@@ -152,13 +152,18 @@ namespace employees.Functions.Funtions
         }
 
         [FunctionName(nameof(GetEntryById))]
-        public static IActionResult GetEntryById(
+        public static async Task<IActionResult> GetEntryById(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "entry/{id}")] HttpRequest req,
-            [Table("entry", "ENTRY", "{id}", Connection = "AzureWebJobsStorage")] EntryEntity entryEntity,
+            [Table("entry", Connection = "AzureWebJobsStorage")] CloudTable entryTable,
             string id,
             ILogger log)
         {
             log.LogInformation($"Get entry by id: {id}, received");
+
+            TableOperation findOperation = TableOperation.Retrieve<EntryEntity>("ENTRY", id);
+            TableResult findResult = await entryTable.ExecuteAsync(findOperation);
+
+            EntryEntity entryEntity = (EntryEntity)findResult.Result;
 
             if (entryEntity == null)
             {
