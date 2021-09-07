@@ -247,8 +247,9 @@ namespace employees.Functions.Funtions
 
         [FunctionName(nameof(StartConsolidation))]
         public static async Task<IActionResult> StartConsolidation(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "consolidated-entries")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "consolidate")] HttpRequest req,
             [Table("entry", Connection = "AzureWebJobsStorage")] CloudTable entryTable,
+            [Table("consolidatedEmployee", Connection = "AzureWebJobsStorage")] CloudTable consolidatedEmployeeTable,
             ILogger log)
         {
             log.LogInformation("Get consolidated entries received");
@@ -258,14 +259,85 @@ namespace employees.Functions.Funtions
             TableQuerySegment<EntryEntity> entries = await entryTable.ExecuteQuerySegmentedAsync(query, null);
             List<EntryEntity> entriesSorted = entries.OrderBy(x => x.EmployeeId).ThenBy(x => x.DateHour).ToList();
 
-            string message = "Here are all your entries mister";
+            if (entriesSorted.Count > 1)
+            {
+
+                for (int x = 0; x < entriesSorted.Count;)
+                {
+
+                    if (entriesSorted.Count == x + 1)
+                    {
+                        break;
+                    }
+
+                    if (entriesSorted[x].Type == 1 && entriesSorted[x + 1].Type == 0)
+                    {
+                        x++;
+                        continue;
+                    }
+
+                    if (entriesSorted[x].EmployeeId == entriesSorted[x + 1].EmployeeId)
+                    {
+                        string pickById = TableQuery.GenerateFilterConditionForInt("EmployeeId", QueryComparisons.Equal, entriesSorted[x].EmployeeId);
+                        TableQuery<ConsolidatedEmployeeEntity> pickEmployeeQuery = new TableQuery<ConsolidatedEmployeeEntity>().Where(pickById);
+                        TableQuerySegment<ConsolidatedEmployeeEntity> currentEmployeeTime = await consolidatedEmployeeTable.ExecuteQuerySegmentedAsync(pickEmployeeQuery, null);
+                        List<ConsolidatedEmployeeEntity> currentEmployeeTotal = currentEmployeeTime.Results;
+
+                        TimeSpan timeSpan = entriesSorted[x + 1].DateHour - entriesSorted[x].DateHour;
+                        DateTime currentDay = new DateTime(entriesSorted[x].DateHour.Year, entriesSorted[x].DateHour.Month, entriesSorted[x].DateHour.Day);
+                        ConsolidatedEmployeeEntity consolidatedEmployeeEntity = new ConsolidatedEmployeeEntity
+                        {
+                            EmployeeId = entriesSorted[x].EmployeeId,
+                            Date = currentDay,
+                            Minutes = (int)timeSpan.TotalMinutes,
+                            ETag = "*",
+                            PartitionKey = "CONSOLIDATEDEMPLOYEE",
+                            RowKey = Guid.NewGuid().ToString()
+                        };
+
+                        TableOperation findOperationOne = TableOperation.Retrieve<EntryEntity>("ENTRY", entriesSorted[x].RowKey);
+                        TableResult findResultOne = await entryTable.ExecuteAsync(findOperationOne);
+                        EntryEntity entryEntityOne = (EntryEntity)findResultOne.Result;
+                        entryEntityOne.IsConsolidated = true;
+                        TableOperation addOperationOne = TableOperation.Replace(entryEntityOne);
+                        await entryTable.ExecuteAsync(addOperationOne);
+
+
+                        TableOperation findOperationTwo = TableOperation.Retrieve<EntryEntity>("ENTRY", entriesSorted[x + 1].RowKey);
+                        TableResult findResultTwo = await entryTable.ExecuteAsync(findOperationTwo);
+                        EntryEntity entryEntityTwo = (EntryEntity)findResultTwo.Result;
+                        entryEntityTwo.IsConsolidated = true;
+                        TableOperation addOperationTwo = TableOperation.Replace(entryEntityTwo);
+                        await entryTable.ExecuteAsync(addOperationTwo);
+
+
+
+                        if (currentEmployeeTime.Results.Count == 0)
+                        {
+                            TableOperation addConsolidated = TableOperation.Insert(consolidatedEmployeeEntity);
+                            await consolidatedEmployeeTable.ExecuteAsync(addConsolidated);
+                        }
+                        else
+                        {
+                            TableOperation findConsolidated = TableOperation.Retrieve<ConsolidatedEmployeeEntity>("CONSOLIDATEDEMPLOYEE", currentEmployeeTime.Results.ElementAt(0).RowKey);
+                            TableResult consolidatedResult = await consolidatedEmployeeTable.ExecuteAsync(findConsolidated);
+                            ConsolidatedEmployeeEntity consolidatedEmployee = (ConsolidatedEmployeeEntity)consolidatedResult.Result;
+                            consolidatedEmployee.Minutes += (int)timeSpan.TotalMinutes;
+                            TableOperation addConsolidated = TableOperation.Replace(consolidatedEmployee);
+                            await consolidatedEmployeeTable.ExecuteAsync(addConsolidated);
+                        }
+                    }
+                    x++;
+                }
+            }
+
+            string message = "Correct register of consolidated";
             log.LogInformation(message);
 
             return new OkObjectResult(new Response
             {
                 IsSuccess = true,
-                Message = message,
-                Result = entriesSorted
+                Message = message
             });
         }
 
