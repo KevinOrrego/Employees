@@ -32,17 +32,33 @@ namespace employees.Test.Helpers
         public static List<EntryEntity> GetListEntryEntity()
         {
             List<EntryEntity> list = new List<EntryEntity>();
-            EntryEntity workingHoursEntity = new EntryEntity
+            EntryEntity entryEntity = new EntryEntity
             {
                 ETag = "*",
-                PartitionKey = "WORKINGHOURS",
+                PartitionKey = "ENTRY",
                 RowKey = Guid.NewGuid().ToString(),
                 EmployeeId = 1,
                 DateHour = DateTime.UtcNow,
                 IsConsolidated = false,
                 Type = 1
             };
-            list.Add(workingHoursEntity);
+            list.Add(entryEntity);
+            return list;
+        }
+
+        public static List<ConsolidatedEmployeeEntity> GetListConsolidatedEmployeeEntity()
+        {
+            List<ConsolidatedEmployeeEntity> list = new List<ConsolidatedEmployeeEntity>();
+            ConsolidatedEmployeeEntity consolidatedEmployeeEntity = new ConsolidatedEmployeeEntity
+            {
+                ETag = "*",
+                PartitionKey = "CONSOLIDATEDEMPLOYEE",
+                RowKey = Guid.NewGuid().ToString(),
+                EmployeeId = 1,
+                Date = DateTime.UtcNow,
+                Minutes = 300
+            };
+            list.Add(consolidatedEmployeeEntity);
             return list;
         }
 
