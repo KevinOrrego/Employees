@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31605.320
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "employees.Common", "employees.Common\employees.Common.csproj", "{03314DF2-2F3D-47F2-9E64-40DDBA85D48C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "employees.Common", "employees.Common\employees.Common.csproj", "{03314DF2-2F3D-47F2-9E64-40DDBA85D48C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "employees.Functions", "employees.Functions\employees.Functions.csproj", "{C77199BC-1EEC-4015-8E9E-E15DA6F9511D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "employees.Functions", "employees.Functions\employees.Functions.csproj", "{C77199BC-1EEC-4015-8E9E-E15DA6F9511D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "employees.Test", "employees.Test\employees.Test.csproj", "{801CA876-C55A-4E16-B294-BFAE42C69960}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "employees.Test", "employees.Test\employees.Test.csproj", "{801CA876-C55A-4E16-B294-BFAE42C69960}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
