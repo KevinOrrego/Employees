@@ -6,19 +6,19 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace kibatodo.Test.Helpers
+namespace employees.Test.Helpers
 {
-    public class MockCloudTableTodos : CloudTable
+    public class MockCloudTableEntries : CloudTable
     {
-        public MockCloudTableTodos(Uri tableAddress) : base(tableAddress)
+        public MockCloudTableEntries(Uri tableAddress) : base(tableAddress)
         {
         }
 
-        public MockCloudTableTodos(Uri tableAbsoluteUri, StorageCredentials credentials) : base(tableAbsoluteUri, credentials)
+        public MockCloudTableEntries(Uri tableAbsoluteUri, StorageCredentials credentials) : base(tableAbsoluteUri, credentials)
         {
         }
 
-        public MockCloudTableTodos(StorageUri tableAddress, StorageCredentials credentials) : base(tableAddress, credentials)
+        public MockCloudTableEntries(StorageUri tableAddress, StorageCredentials credentials) : base(tableAddress, credentials)
         {
         }
 
@@ -27,7 +27,7 @@ namespace kibatodo.Test.Helpers
             return await Task.FromResult(new TableResult
             {
                 HttpStatusCode =200,
-                Result= TestFactory.GetTodoEntity()
+                Result= TestFactory.GetEntryEntity()
             });
         }
     }
